@@ -1,45 +1,34 @@
 # main.py
-
 import os
 import time
-import openai
-import psutil
-import pyautogui
-# import other libraries as needed
-
-# Load API keys from .env (optional)
 from dotenv import load_dotenv
-load_dotenv()
+from executor import run_command
+from gpt import ask_gpt
+from utils.helpers import safe_print, format_output
 
+load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-# Initialize AI model (example with OpenAI API)
-def ask_gpt(prompt):
-    import openai
-    openai.api_key = OPENAI_API_KEY
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[{"role": "user", "content": prompt}]
-    )
-    return response.choices[0].message['content']
-
-# Example task: simple system info
-def system_status():
-    print(f"CPU usage: {psutil.cpu_percent()}%")
-    print(f"Memory usage: {psutil.virtual_memory().percent}%")
-
-# Main loop
 def main():
+    safe_print("AI Agent Started. Type 'exit' to quit.")
+    
     while True:
-        user_input = input("Command for AI Agent: ")
+        user_input = input("Command for AI Agent: ").strip()
         if user_input.lower() in ["exit", "quit"]:
-            print("Shutting down...")
+            safe_print("Shutting down AI Agent...")
             break
-        # Ask GPT for instructions
+        
         gpt_response = ask_gpt(user_input)
-        print("AI says:", gpt_response)
-        # Here you could add code to execute tasks based on GPT response
-        # For now, just print
+        safe_print(f"GPT Response: {gpt_response}")
+
+        # Only run GPT commands prepended with "run:"
+        if "run:" in gpt_response:
+            command = gpt_response.split("run:")[1].strip()
+            output = run_command(command)
+            print(format_output(output))
+        else:
+            safe_print("No executable command detected.")
+
         time.sleep(1)
 
 if __name__ == "__main__":
